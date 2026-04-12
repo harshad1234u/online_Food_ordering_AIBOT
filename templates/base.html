@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Foodie - Intelligent Food Ordering</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="/">
+                <i class="fa-solid fa-utensils"></i>
+                FOO<span>DIE</span>
+            </a>
+        </div>
+        <div class="nav-links" id="nav-links">
+            <a href="/menu">Menu</a>
+            <a href="/cart" class="cart-link">
+                <i class="fa-solid fa-cart-shopping"></i> Cart
+                <span class="cart-count badge" style="display: none;">0</span>
+            </a>
+            <div id="auth-links" style="display: inline-block;">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+        <div class="hamburger">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Chatbot Widget -->
+    <div class="chatbot-widget">
+        <button class="chatbot-toggle" id="chatbot-toggle">
+            <i class="fa-solid fa-robot"></i>
+        </button>
+        <div class="chatbot-panel" id="chatbot-panel" style="display: none;">
+            <div class="chatbot-header">
+                <h3><i class="fa-solid fa-robot"></i> AI Chef</h3>
+                <button class="chatbot-close" id="chatbot-close"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="chatbot-messages" id="chatbot-messages">
+                <div class="message bot-message">
+                    Hi! I'm your AI chef. I can recommend dishes, or you can just tell me what to order. Try saying
+                    "Suggest something spicy" or "Order Biryani"!
+                </div>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" id="chatbot-input-field" placeholder="Ask me anything...">
+                <button id="chatbot-send"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

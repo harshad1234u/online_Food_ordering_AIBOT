@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="menu-container">
+    <aside class="menu-sidebar glass">
+        <h3>Categories</h3>
+        <ul id="category-list">
+            <li><a href="#" class="active" data-cat="">All</a></li>
+            <!-- Filled by JS -->
+        </ul>
+        
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="Search food...">
+            <button id="search-btn"><i class="fa-solid fa-search"></i></button>
+        </div>
+    </aside>
+    
+    <div class="menu-content">
+        <div class="food-grid" id="food-grid">
+            <!-- Filled by JS -->
+            <div class="loader">Loading menu...</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+{% endblock %}

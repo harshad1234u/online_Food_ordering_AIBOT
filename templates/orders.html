@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="orders-container">
+    <h2 class="page-title">Order History</h2>
+    
+    <div class="orders-list" id="orders-list">
+        <!-- Filled by JS -->
+        <div class="loader">Loading orders...</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', loadOrders);
+
+async function loadOrders() {
+    try {
+        const res = await fetch('/api/orders/');
+        if (res.status === 401) {
+            window.location.href = '/login';
+            return;
+        }
+        const orders = await res.json();
+        
+        const container = document.getElementById('orders-list');
+        if (orders.length === 0) {
+            container.innerHTML = '<p>You have no past orders.</p>';
+            return;
+        }
+        
+        container.innerHTML = orders.map(order => `
+            <div class="order-card glass">
+                <div class="order-header">
+                    <h4>Order #${order.order_id}</h4>
+                    <span class="status badge ${order.status.toLowerCase()}">${order.status}</span>
+                </div>
+                <div class="order-date">${new Date(order.order_date).toLocaleString()}</div>
+                <div class="order-items">
+                    ${order.items.map(item => `
+                        <div class="order-item-row">
+                            <span>${item.quantity}x ${item.name}</span>
+                            <span>₹${(item.quantity * parseFloat(item.price)).toFixed(2)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="order-total">
+                    <strong>Total: ₹${parseFloat(order.total_price).toFixed(2)}</strong>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (e) {
+        console.error(e);
+        document.getElementById('orders-list').innerHTML = '<p>Error loading orders.</p>';
+    }
+}
+</script>
+{% endblock %}

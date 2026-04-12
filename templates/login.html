@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card glass toggle-active" id="login-section">
+        <h2>Welcome Back</h2>
+        <p>Login to continue your delicious journey</p>
+        <form id="login-form">
+            <div class="form-group">
+                <i class="fa-solid fa-envelope"></i>
+                <input type="email" id="login-email" placeholder="Email Address" required>
+            </div>
+            <div class="form-group">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="login-password" placeholder="Password" required>
+            </div>
+            <div class="error-text" id="login-error"></div>
+            <button type="submit" class="btn btn-primary btn-block">Login Now</button>
+        </form>
+        <p class="auth-switch">Don't have an account? <a href="#" id="go-to-register">Sign Up</a></p>
+    </div>
+
+    <div class="auth-card glass" id="register-section" style="display: none;">
+        <h2>Create Account</h2>
+        <p>Join AI Foodie today</p>
+        <form id="register-form">
+            <div class="form-group">
+                <i class="fa-solid fa-user"></i>
+                <input type="text" id="reg-name" placeholder="Full Name" required>
+            </div>
+            <div class="form-group">
+                <i class="fa-solid fa-envelope"></i>
+                <input type="email" id="reg-email" placeholder="Email Address" required>
+            </div>
+            <div class="form-group">
+                <i class="fa-solid fa-phone"></i>
+                <input type="tel" id="reg-phone" placeholder="Phone Number" required>
+            </div>
+            <div class="form-group">
+                <i class="fa-solid fa-map"></i>
+                <input type="text" id="reg-address" placeholder="Delivery Address" required>
+            </div>
+            <div class="form-group">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="reg-password" placeholder="Password" required>
+            </div>
+            <div class="error-text" id="reg-error"></div>
+            <button type="submit" class="btn btn-primary btn-block">Register</button>
+        </form>
+        <p class="auth-switch">Already have an account? <a href="#" id="go-to-login">Login</a></p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('go-to-register').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('register-section').style.display = 'block';
+    });
+    
+    document.getElementById('go-to-login').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('register-section').style.display = 'none';
+        document.getElementById('login-section').style.display = 'block';
+    });
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        
+        try {
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email, password})
+            });
+            const data = await res.json();
+            if(res.ok) {
+                window.location.href = '/menu';
+            } else {
+                document.getElementById('login-error').innerText = data.error;
+            }
+        } catch (err) {
+            document.getElementById('login-error').innerText = "Network error";
+        }
+    });
+
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+            name: document.getElementById('reg-name').value,
+            email: document.getElementById('reg-email').value,
+            phone: document.getElementById('reg-phone').value,
+            address: document.getElementById('reg-address').value,
+            password: document.getElementById('reg-password').value,
+        };
+        
+        try {
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if(res.ok) {
+                // Auto login or prompt login
+                document.getElementById('go-to-login').click();
+                alert("Registration successful. Please login.");
+            } else {
+                document.getElementById('reg-error').innerText = data.error;
+            }
+        } catch (err) {
+            document.getElementById('reg-error').innerText = "Network error";
+        }
+    });
+</script>
+{% endblock %}

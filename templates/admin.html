@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="admin-container">
+    <h2 class="page-title">Admin Dashboard</h2>
+    
+    <div class="admin-tabs">
+        <button class="btn btn-secondary active" onclick="showTab('foods')">Manage Foods</button>
+        <button class="btn btn-secondary" onclick="showTab('orders')">View Setup Orders</button>
+    </div>
+    
+    <div id="foods-tab" class="admin-tab-content">
+        <div class="admin-header">
+            <h3>Menu Items</h3>
+            <button class="btn btn-primary" onclick="document.getElementById('add-food-modal').style.display='flex'">Add New Food</button>
+        </div>
+        <table class="admin-table glass" id="admin-foods-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Populated by JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <div id="orders-tab" class="admin-tab-content" style="display: none;">
+        <h3>Recent Orders</h3>
+        <table class="admin-table glass" id="admin-orders-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Total</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Populated by JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="add-food-modal" style="display:none;">
+    <div class="modal-content glass">
+        <span class="close" onclick="document.getElementById('add-food-modal').style.display='none'">&times;</span>
+        <h2>Add New Food Item</h2>
+        <form id="add-food-form">
+            <input type="text" id="af-name" placeholder="Name" required>
+            <input type="text" id="af-category" placeholder="Category" required>
+            <input type="number" step="0.01" id="af-price" placeholder="Price" required>
+            <textarea id="af-desc" placeholder="Description"></textarea>
+            <input type="url" id="af-img" placeholder="Image URL">
+            <button type="submit" class="btn btn-primary btn-block" style="margin-top: 15px;">Add Item</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showTab(tab) {
+    document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display = 'none');
+    document.getElementById(tab + '-tab').style.display = 'block';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if admin
+    fetch('/api/me').then(res => res.json()).then(user => {
+        if(!user.is_admin) {
+            document.body.innerHTML = '<h1>Unauthorized</h1>';
+            window.location.href = '/';
+        } else {
+            loadAdminData();
+        }
+    });
+});
+
+async function loadAdminData() {
+    // Load Foods
+    const foodRes = await fetch('/api/menu/');
+    const foods = await foodRes.json();
+    document.querySelector('#admin-foods-table tbody').innerHTML = foods.map(f => `
+        <tr>
+            <td>${f.food_id}</td>
+            <td>${f.name}</td>
+            <td>${f.category}</td>
+            <td>₹${f.price}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteFood(${f.food_id})">Delete</button></td>
+        </tr>
+    `).join('');
+    
+    // Load Orders
+    const orderRes = await fetch('/api/admin/orders');
+    if (orderRes.ok) {
+        const orders = await orderRes.json();
+        document.querySelector('#admin-orders-table tbody').innerHTML = orders.map(o => `
+            <tr>
+                <td>${o.order_id}</td>
+                <td>${o.user_name} (${o.email})</td>
+                <td>₹${o.total_price}</td>
+                <td>${new Date(o.order_date).toLocaleString()}</td>
+                <td><span class="badge ${o.status.toLowerCase()}">${o.status}</span></td>
+            </tr>
+        `).join('');
+    }
+}
+
+document.getElementById('add-food-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+        name: document.getElementById('af-name').value,
+        category: document.getElementById('af-category').value,
+        price: parseFloat(document.getElementById('af-price').value),
+        description: document.getElementById('af-desc').value,
+        image_url: document.getElementById('af-img').value
+    };
+    
+    await fetch('/api/admin/foods', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    });
+    
+    document.getElementById('add-food-modal').style.display = 'none';
+    loadAdminData();
+});
+
+async function deleteFood(id) {
+    if(confirm('Are you sure?')) {
+        await fetch('/api/admin/foods/'+id, { method: 'DELETE' });
+        loadAdminData();
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="cart-container" style="max-width: 600px; margin: 40px auto;">
+    <h2 class="page-title text-center">Secure Checkout</h2>
+    
+    <div class="cart-summary glass" style="margin-top: 20px;">
+        <h3 style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">Order Summary</h3>
+        
+        <div id="payment-summary">
+            <!-- Populated by JS -->
+            <div class="loader">Calculating totals...</div>
+        </div>
+
+        <h3 style="margin-top: 30px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">Payment Method</h3>
+        <form id="payment-form">
+            <div style="margin-bottom: 15px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 5px;">
+                    <input type="radio" name="payment_method" value="upi" checked> 
+                    <i class="fa-solid fa-mobile-screen"></i> UPI (GPay/PhonePe/Paytm)
+                </label>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 5px;">
+                    <input type="radio" name="payment_method" value="card"> 
+                    <i class="fa-solid fa-credit-card"></i> Credit / Debit Card
+                </label>
+            </div>
+            <div style="margin-bottom: 25px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 5px;">
+                    <input type="radio" name="payment_method" value="cod"> 
+                    <i class="fa-solid fa-money-bill-wave"></i> Cash on Delivery
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="pay-btn">Pay Now</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // Load cart totals
+        const res = await fetch('/api/cart/');
+        if (res.status === 401) {
+            window.location.href = '/login';
+            return;
+        }
+        const data = await res.json();
+        
+        if (data.items.length === 0) {
+            window.location.href = '/cart';
+            return;
+        }
+        
+        const summaryDiv = document.getElementById('payment-summary');
+        const subtotal = data.total;
+        const deliveryFee = 50.00;
+        const total = subtotal + deliveryFee;
+        
+        summaryDiv.innerHTML = `
+            <div class="summary-row">
+                <span>Items (${data.items.reduce((acc, item) => acc + item.quantity, 0)})</span>
+                <span>₹${subtotal.toFixed(2)}</span>
+            </div>
+            <div class="summary-row">
+                <span>Delivery Fee</span>
+                <span>₹${deliveryFee.toFixed(2)}</span>
+            </div>
+            <div class="summary-row total" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed rgba(255,255,255,0.2);">
+                <span>Total Amount to Pay</span>
+                <span class="highlight">₹${total.toFixed(2)}</span>
+            </div>
+        `;
+        
+        document.getElementById('pay-btn').innerText = `Pay ₹${total.toFixed(2)}`;
+        
+    } catch(e) {
+        console.error(e);
+        document.getElementById('payment-summary').innerHTML = '<p>Error loading order summary.</p>';
+    }
+});
+
+document.getElementById('payment-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('pay-btn');
+    const originalText = btn.innerText;
+    
+    btn.disabled = true;
+    btn.innerHTML = 'Processing Payment... <i class="fa-solid fa-spinner fa-spin"></i>';
+    
+    // Simulate payment delay
+    await new Promise(r => setTimeout(r, 1500));
+    
+    try {
+        // Trigger the place order API
+        const res = await fetch('/api/orders/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        });
+        
+        const data = await res.json();
+        if(res.ok) {
+            btn.innerHTML = 'Payment Successful! <i class="fa-solid fa-check"></i>';
+            btn.style.background = '#00c853';
+            setTimeout(() => {
+                window.location.href = '/orders';
+            }, 1000);
+        } else {
+            alert(data.error || "Payment failed");
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
+    } catch(err) {
+        alert("Network error processing payment.");
+        btn.disabled = false;
+        btn.innerText = originalText;
+    }
+});
+</script>
+{% endblock %}

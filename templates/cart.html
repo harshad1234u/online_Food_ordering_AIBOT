@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="cart-container">
+    <h2 class="page-title">Your Cart</h2>
+    
+    <div class="cart-layout">
+        <div class="cart-items" id="cart-items">
+            <!-- Filled by JS -->
+            <div class="empty-cart-message">Your cart is empty. <a href="/menu">Browse Menu</a></div>
+        </div>
+        
+        <div class="cart-summary glass">
+            <h3>Order Summary</h3>
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span id="cart-subtotal">₹0.00</span>
+            </div>
+            <div class="summary-row">
+                <span>Delivery Fee</span>
+                <span>₹50.00</span>
+            </div>
+            <div class="summary-row total">
+                <span>Total</span>
+                <span id="cart-total">₹0.00</span>
+            </div>
+            <button class="btn btn-primary btn-block" id="checkout-btn" disabled>Proceed to Checkout</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+{% endblock %}
